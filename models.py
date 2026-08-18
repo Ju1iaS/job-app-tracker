@@ -23,6 +23,8 @@ class Application(Base):
     current_status = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    job_url = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
 
 
 class StatusHistory(Base):

@@ -91,3 +91,15 @@ def update_application(application_id: int, update: schemas.ApplicationUpdate, d
         db.commit()
 
     return application
+
+@app.delete("/applications/{application_id}")
+def delete_application(application_id: int, db: Session = Depends(get_db)):
+    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    db.query(models.StatusHistory).filter(models.StatusHistory.application_id == application_id).delete()
+    db.delete(application)
+    db.commit()
+
+    return {"detail": "Application deleted"}

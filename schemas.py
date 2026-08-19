@@ -24,3 +24,12 @@ class ApplicationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ApplicationUpdate(BaseModel):
+    company: Optional[str] = None
+    role: Optional[str] = None
+    date_applied: Optional[date] = None
+    source: Optional[str] = None
+    current_status: Optional[str] = None
+    job_url: Optional[str] = None
+    notes: Optional[str] = None

@@ -66,3 +66,28 @@ def get_application(application_id: int, db: Session = Depends(get_db)):
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     return application
+
+@app.patch("/applications/{application_id}", response_model=schemas.ApplicationResponse)
+def update_application(application_id: int, update: schemas.ApplicationUpdate, db: Session = Depends(get_db)):
+    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    update_data = update.model_dump(exclude_unset=True)
+    status_changed = "current_status" in update_data and update_data["current_status"] != application.current_status
+
+    for field, value in update_data.items():
+        setattr(application, field, value)
+
+    db.commit()
+    db.refresh(application)
+
+    if status_changed:
+        status_entry = models.StatusHistory(
+            application_id=application.id,
+            status=application.current_status,
+        )
+        db.add(status_entry)
+        db.commit()
+
+    return application

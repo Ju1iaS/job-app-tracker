@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from datetime import datetime
+from typing import List, Optional
 
 from database import SessionLocal
 import models
@@ -40,3 +41,21 @@ def create_application(application: schemas.ApplicationCreate, db: Session = Dep
     db.commit()
 
     return new_application
+
+@app.get("/applications", response_model=List[schemas.ApplicationResponse])
+def list_applications(
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    sort : str = "desc",
+    db: Session = Depends(get_db)):
+
+    query = db.query(models.Application)
+    if role:
+        query = query.filter(models.Application.role == role)
+    if sort == "asc":
+        query = query.order_by(models.Application.date_applied.asc())
+    else:
+        query = query.order_by(models.Application.date_applied.desc())
+    if status:
+        query = query.filter(models.Application.current_status == status)
+    return query.all()

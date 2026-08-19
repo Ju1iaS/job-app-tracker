@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import List, Optional
@@ -59,3 +59,10 @@ def list_applications(
     if status:
         query = query.filter(models.Application.current_status == status)
     return query.all()
+
+@app.get("/applications/{application_id}", response_model=schemas.ApplicationResponse)
+def get_application(application_id: int, db: Session = Depends(get_db)):
+    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return application

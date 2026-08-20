@@ -9,14 +9,10 @@ import schemas
 
 import auth
 
+from auth import get_db, get_current_user
+
 app = FastAPI()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @app.get("/")
 def read_root():

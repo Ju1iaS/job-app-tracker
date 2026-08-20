@@ -7,6 +7,8 @@ from database import SessionLocal
 import models
 import schemas
 
+import auth
+
 app = FastAPI()
 
 def get_db():
@@ -103,3 +105,18 @@ def delete_application(application_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"detail": "Application deleted"}
+
+@app.post("/signup", response_model=schemas.UserResponse)
+def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    new_user = models.User(
+        email=user.email,
+        hashed_password=auth.hash_password(user.password),
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user

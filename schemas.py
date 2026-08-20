@@ -33,3 +33,14 @@ class ApplicationUpdate(BaseModel):
     current_status: Optional[str] = None
     job_url: Optional[str] = None
     notes: Optional[str] = None
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        from_attributes = True

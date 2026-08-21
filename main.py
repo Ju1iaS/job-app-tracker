@@ -11,6 +11,8 @@ import auth
 
 from auth import get_db, get_current_user
 
+import pandas as pd
+
 app = FastAPI()
 
 
@@ -154,3 +156,33 @@ def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
 
     access_token = auth.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+STAGE_ORDER = ["Applied", "OA", "Interview", "Offer"]
+
+@app.get("/summary/funnel")
+def funnel_summary(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    results = (
+        db.query(models.StatusHistory.application_id, models.StatusHistory.status)
+        .join(models.Application, models.Application.id == models.StatusHistory.application_id)
+        .filter(models.Application.user_id == current_user.id)
+        .all()
+    )
+
+    if not results:
+        return {"total_applications": 0, "funnel": []}
+
+    df = pd.DataFrame(results, columns=["application_id", "status"])
+    df["stage_rank"] = df["status"].apply(lambda s: STAGE_ORDER.index(s) if s in STAGE_ORDER else -1)
+
+    furthest_per_app = df.loc[df.groupby("application_id")["stage_rank"].idxmax()]
+
+    total = furthest_per_app["application_id"].nunique()
+    funnel = []
+    for stage in STAGE_ORDER:
+        reached = (furthest_per_app["stage_rank"] >= STAGE_ORDER.index(stage)).sum()
+        rate = round((reached / total) * 100, 1) if total > 0 else 0
+        funnel.append({"stage": stage, "count": int(reached), "conversion_rate": rate})
+
+    return {"total_applications": total, "funnel": funnel}

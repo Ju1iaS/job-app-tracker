@@ -1,13 +1,22 @@
 from pydantic import BaseModel
 from datetime import date, datetime
 from typing import Optional
+from enum import Enum
 
+class ApplicationStatus(str, Enum):
+    applied = "Applied"
+    oa = "OA"
+    interview = "Interview"
+    offer = "Offer"
+    rejected = "Rejected"
+    ghosted = "Ghosted"
+    
 class ApplicationCreate(BaseModel):
     company: str
     role: str
     date_applied: date
     source: str
-    current_status: str = "Applied"
+    current_status: ApplicationStatus = ApplicationStatus.applied
     job_url: Optional[str] = None
     notes: Optional[str] = None
 
@@ -31,7 +40,7 @@ class ApplicationUpdate(BaseModel):
     role: Optional[str] = None
     date_applied: Optional[date] = None
     source: Optional[str] = None
-    current_status: Optional[str] = None
+    current_status: Optional[ApplicationStatus] = None
     job_url: Optional[str] = None
     notes: Optional[str] = None
 

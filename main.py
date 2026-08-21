@@ -232,3 +232,47 @@ def response_time_summary(db: Session = Depends(get_db), current_user: models.Us
     )
 
     return {"average_response_days": overall_avg, "by_source": by_source}
+
+@app.get("/summary/by-group")
+def by_group_summary(
+    group_by: str = "source",
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if group_by not in ["source", "role"]:
+        raise HTTPException(status_code=400, detail="group_by must be 'source' or 'role'")
+
+    group_column = models.Application.source if group_by == "source" else models.Application.role
+
+    results = (
+        db.query(
+            models.StatusHistory.application_id,
+            models.StatusHistory.status,
+            group_column.label("group_value"),
+        )
+        .join(models.Application, models.Application.id == models.StatusHistory.application_id)
+        .filter(models.Application.user_id == current_user.id)
+        .all()
+    )
+
+    if not results:
+        return {"group_by": group_by, "breakdown": []}
+
+    df = pd.DataFrame(results, columns=["application_id", "status", "group_value"])
+    df["stage_rank"] = df["status"].apply(lambda s: STAGE_ORDER.index(s) if s in STAGE_ORDER else -1)
+
+    furthest_per_app = df.loc[df.groupby("application_id")["stage_rank"].idxmax()]
+
+    breakdown = []
+    for group_value, group_df in furthest_per_app.groupby("group_value"):
+        total = len(group_df)
+        reached_oa_or_further = (group_df["stage_rank"] >= STAGE_ORDER.index("OA")).sum()
+        rate = round((reached_oa_or_further / total) * 100, 1) if total > 0 else 0
+        breakdown.append({
+            "group_value": group_value,
+            "total_applications": total,
+            "reached_oa_or_further": int(reached_oa_or_further),
+            "conversion_rate": rate,
+        })
+
+    return {"group_by": group_by, "breakdown": breakdown}

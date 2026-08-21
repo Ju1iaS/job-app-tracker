@@ -186,3 +186,49 @@ def funnel_summary(db: Session = Depends(get_db), current_user: models.User = De
         funnel.append({"stage": stage, "count": int(reached), "conversion_rate": rate})
 
     return {"total_applications": total, "funnel": funnel}
+
+
+@app.get("/summary/response-time")
+def response_time_summary(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    results = (
+        db.query(
+            models.Application.id,
+            models.Application.date_applied,
+            models.Application.source,
+            models.StatusHistory.status,
+            models.StatusHistory.changed_at,
+        )
+        .join(models.StatusHistory, models.StatusHistory.application_id == models.Application.id)
+        .filter(models.Application.user_id == current_user.id)
+        .all()
+    )
+
+    if not results:
+        return {"average_response_days": None, "by_source": []}
+
+    df = pd.DataFrame(results, columns=["application_id", "date_applied", "source", "status", "changed_at"])
+
+    non_applied = df[df["status"] != "Applied"]
+
+    first_response = (
+        non_applied.sort_values("changed_at")
+        .groupby("application_id")
+        .first()
+        .reset_index()
+    )
+
+    first_response["date_applied"] = pd.to_datetime(first_response["date_applied"])
+    first_response["changed_at"] = pd.to_datetime(first_response["changed_at"])
+    first_response["response_days"] = (first_response["changed_at"] - first_response["date_applied"]).dt.days
+
+    overall_avg = round(first_response["response_days"].mean(), 1)
+
+    by_source = (
+        first_response.groupby("source")["response_days"]
+        .mean()
+        .round(1)
+        .reset_index()
+        .to_dict(orient="records")
+    )
+
+    return {"average_response_days": overall_avg, "by_source": by_source}

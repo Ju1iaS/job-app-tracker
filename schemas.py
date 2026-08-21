@@ -13,6 +13,7 @@ class ApplicationCreate(BaseModel):
 
 class ApplicationResponse(BaseModel):
     id: int
+    user_id: int
     company: str
     role: str
     date_applied: date

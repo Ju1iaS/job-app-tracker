@@ -19,8 +19,13 @@ def read_root():
     return {"message": "Job app tracker API is running"}
 
 @app.post("/applications", response_model=schemas.ApplicationResponse)
-def create_application(application: schemas.ApplicationCreate, db: Session = Depends(get_db)):
+def create_application(
+    application: schemas.ApplicationCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
     new_application = models.Application(
+        user_id = current_user.id,
         company=application.company,
         role=application.role,
         date_applied=application.date_applied,
@@ -45,9 +50,11 @@ def list_applications(
     role: Optional[str] = None,
     status: Optional[str] = None,
     sort : str = "desc",
-    db: Session = Depends(get_db)):
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
 
-    query = db.query(models.Application)
+    query = db.query(models.Application).filter(models.Application.user_id == current_user.id)
     if role:
         query = query.filter(models.Application.role == role)
     if sort == "asc":
@@ -59,15 +66,30 @@ def list_applications(
     return query.all()
 
 @app.get("/applications/{application_id}", response_model=schemas.ApplicationResponse)
-def get_application(application_id: int, db: Session = Depends(get_db)):
-    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+def get_application(
+    application_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    application = db.query(models.Application).filter(
+        models.Application.id == application_id,
+        models.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     return application
 
 @app.patch("/applications/{application_id}", response_model=schemas.ApplicationResponse)
-def update_application(application_id: int, update: schemas.ApplicationUpdate, db: Session = Depends(get_db)):
-    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+def update_application(
+    application_id: int, 
+    update: schemas.ApplicationUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    application = db.query(models.Application).filter(
+        models.Application.id == application_id,
+        models.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
 
@@ -91,8 +113,15 @@ def update_application(application_id: int, update: schemas.ApplicationUpdate, d
     return application
 
 @app.delete("/applications/{application_id}")
-def delete_application(application_id: int, db: Session = Depends(get_db)):
-    application = db.query(models.Application).filter(models.Application.id == application_id).first()
+def delete_application(
+    application_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    application = db.query(models.Application).filter(
+        models.Application.id == application_id,
+        models.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
 

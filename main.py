@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import List, Optional
 
-from database import SessionLocal
+from database import SessionLocal, engine, Base
 import models
 import schemas
 
@@ -18,6 +18,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter

@@ -32,9 +32,9 @@ I built this to track my own job search, gain meaningful information, and to pra
 - Full CRUD on applications, scoped per-user via JWT auth.
 - Automatic status-history logging: every status change is recorded with a timestamp, not just overwritten.
 - Three analytics endpoints:
-  - `/summary/funnel` — cumulative conversion rate through each stage (Applied to OA to Interview to Offer)
-  - `/summary/response-time` — average days to first response, overall and by source
-  - `/summary/by-group` — conversion rate broken down by source or role
+  - `/summary/funnel` - cumulative conversion rate through each stage (Applied to OA to Interview to Offer)
+  - `/summary/response-time` - average days to first response, overall and by source
+  - `/summary/by-group` - conversion rate broken down by source or role
 - Rate limiting on auth endpoints (5 requests/minute) to prevent brute-force attempts.
 - Enforced password strength and email/status validation via Pydantic.
 - Passwords hashed with bcrypt.

@@ -19,13 +19,13 @@ I built this to track my own job search, gain meaningful information, and to pra
 
 ## Tech stack
 
-- **FastAPI** — REST API framework
+- **FastAPI** - REST API framework
 - **SQLAlchemy** - ORM
-- **PostgreSQL** (production) / **SQLite** (local dev) — `database.py` reads a `DATABASE_URL` environment variable if present and falls back to local SQLite otherwise, so local dev has zero setup cost while production gets a persistent database
-- **Pandas** — analytics endpoints
-- **JWT (python-jose) + bcrypt (passlib)** — authentication
-- **slowapi** — rate limiting
-- **Railway** — deployment
+- **PostgreSQL** (production) / **SQLite** (local dev) - `database.py` reads a `DATABASE_URL` environment variable if present and falls back to local SQLite otherwise, so local dev has zero setup cost while production gets a persistent database
+- **Pandas** - analytics endpoints
+- **JWT (python-jose) + bcrypt (passlib)** - authentication
+- **slowapi** - rate limiting
+- **Railway** - deployment
 
 ## Features
 

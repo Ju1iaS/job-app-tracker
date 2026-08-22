@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date, datetime
 from typing import Optional
 from enum import Enum
@@ -10,7 +10,7 @@ class ApplicationStatus(str, Enum):
     offer = "Offer"
     rejected = "Rejected"
     ghosted = "Ghosted"
-    
+
 class ApplicationCreate(BaseModel):
     company: str
     role: str
@@ -46,7 +46,7 @@ class ApplicationUpdate(BaseModel):
 
 class UserCreate(BaseModel):
     email: str
-    password: str
+    password: str = Field(..., min_length=8, max_length=72)
 
 class UserResponse(BaseModel):
     id: int

@@ -20,6 +20,16 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+
 def get_real_client_ip(request: Request):
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
